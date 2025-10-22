@@ -1,4 +1,4 @@
-import { addDoc, collection, deleteDoc, doc } from "firebase/firestore";
+import { addDoc, getDocs, collection, deleteDoc, doc } from "firebase/firestore";
 import { db } from "../firebase";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
@@ -52,6 +52,27 @@ const RecordPage = () => {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [heightCm, setHeightCm] = useState("");
   const [weightKg, setWeightKg] = useState("");
+
+  // Firestoreからデータを読み込む
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const snapshot = await getDocs(collection(db, "records"));
+        const records = snapshot.docs.map(doc => ({
+          id: doc.id,
+          firestoreId: doc.id,
+          ...doc.data(),
+        }));
+        records.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        records.forEach(r => addEntry(r));
+        console.log("Firestoreからデータ取得完了:", records.length);
+      } catch (error) {
+        console.error("Firestoreデータの読み込み失敗:", error);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   useEffect(() => {
     if (evaluatorNames.length === 0) {
