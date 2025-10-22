@@ -58,13 +58,24 @@ const RecordPage = () => {
     const fetchData = async () => {
       try {
         const snapshot = await getDocs(collection(db, "records"));
-        const records = snapshot.docs.map(doc => ({
+        const records = snapshot.docs.map((doc) => ({
           id: doc.id,
           firestoreId: doc.id,
           ...doc.data(),
         }));
-        records.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-        records.forEach(r => addEntry(r));
+
+        // Timestamp型にも対応した安全なソート
+        records.sort(
+          (a, b) =>
+            new Date(
+              b.createdAt?.seconds ? b.createdAt.seconds * 1000 : b.createdAt
+            ).getTime() -
+            new Date(
+              a.createdAt?.seconds ? a.createdAt.seconds * 1000 : a.createdAt
+            ).getTime()
+        );
+
+        records.forEach((r) => addEntry(r));
         console.log("Firestoreからデータ取得完了:", records.length);
       } catch (error) {
         console.error("Firestoreデータの読み込み失敗:", error);
@@ -449,3 +460,4 @@ const RecordPage = () => {
 };
 
 export default RecordPage;
+
